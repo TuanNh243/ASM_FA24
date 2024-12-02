@@ -76,7 +76,7 @@ router.get('/type', verifyToken, async (req, res) => {
       }
 
       // Query to find all vouchers matching the voucherType
-      const vouchers = await Voucher.find({ voucherType: voucherType });
+      const vouchers = await Voucher.find({ voucherType });
 
       // If no vouchers are found, return a specific message
       if (vouchers.length === 0) {
