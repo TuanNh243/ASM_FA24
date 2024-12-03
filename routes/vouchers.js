@@ -28,7 +28,8 @@ const verifyToken = async (req, res, next) => {
 router.get('/', verifyToken, async (req, res) => {
     try {
         const vouchers = await Voucher.find();
-        res.status(200).json(vouchers);
+        res.status(200).json({status: 200, message:"ok",data:
+            vouchers});
     } catch (err) {
         console.error("Error fetching vouchers:", err);
         res.status(500).json({ message: err.message });
@@ -69,27 +70,26 @@ router.put('/:id', verifyToken, async (req, res) => {
 
 // Route: Filter vouchers by type
 router.get('/type', verifyToken, async (req, res) => {
-  try {
-      const { voucherType } = req.query;
-      if (!voucherType) {
-          return res.status(400).json({ message: 'Voucher type is required' });
-      }
-
-      // Query to find all vouchers matching the voucherType
-      const vouchers = await Voucher.find({ voucherType });
-
-      // If no vouchers are found, return a specific message
-      if (vouchers.length === 0) {
-          return res.status(404).json({ message: `No vouchers found with type: ${voucherType}` });
-      }
-
-      // If vouchers are found, return them
-      res.status(200).json(vouchers);
-  } catch (err) {
-      console.error("Error filtering vouchers by type:", err);
-      res.status(500).json({ message: 'Error filtering vouchers by type', error: err });
-  }
-});
+    try {
+        const { voucherType } = req.query; 
+  
+        if (!voucherType || typeof voucherType !== 'string') {
+            return res.status(400).json({ message: 'Voucher type is required and must be a string' });
+        }
+  
+        const vouchers = await Voucher.find({ voucherType });
+  
+        if (vouchers.length === 0) {
+            return res.status(404).json({ message: `No vouchers found with type: ${voucherType}` });
+        }
+  
+        res.status(200).json(vouchers);
+    } catch (err) {
+        console.error("Error filtering vouchers by type:", err);
+        res.status(500).json({ message: 'Error filtering vouchers by type', error: err });
+    }
+  });
+  
 
 
 router.get('/date', verifyToken, async (req, res) => {
