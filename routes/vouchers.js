@@ -25,7 +25,7 @@ const verifyToken = async (req, res, next) => {
 };
 
 // Route: Get all vouchers
-router.get('/', verifyToken, async (req, res) => {
+router.get('/',         verifyToken, async (req, res) => {
     try {
         const vouchers = await Voucher.find();
         res.status(200).json({status: 200, message:"ok",data:
@@ -50,6 +50,8 @@ router.post('/add', verifyToken, async (req, res) => {
         res.status(500).json({ message: 'Error creating voucher', error });
     }
 
+});
+
 
 // Route: Update voucher by ID
 router.put('/:id', verifyToken, async (req, res) => {
@@ -69,29 +71,29 @@ router.put('/:id', verifyToken, async (req, res) => {
 
 
 // Route: Filter vouchers by type
-router.get('/type', verifyToken, async (req, res) => {
+router.get('/type', async (req, res) => {
     try {
-        const { voucherType } = req.query; 
-  
+        const { voucherType } = req.query;
+
         if (!voucherType || typeof voucherType !== 'string') {
             return res.status(400).json({ message: 'Voucher type is required and must be a string' });
         }
-  
-        const vouchers = await Voucher.find({ voucherType });
-  
+
+        // Truy vấn theo voucherType
+        const vouchers = await Voucher.find({ voucherType:voucherType });
+
         if (vouchers.length === 0) {
-            return res.status(404).json({ message: `No vouchers found with type: ${voucherType}` });
+            return res.status(404).json({ message: `Không có voucher với loại: ${voucherType}` });
         }
-  
+
         res.status(200).json(vouchers);
     } catch (err) {
-        console.error("Error filtering vouchers by type:", err);
-        res.status(500).json({ message: 'Error filtering vouchers by type', error: err });
+        console.error("Lỗi khi tìm kiếm voucher:", err);
+        res.status(500).json({ message: 'Lỗi khi tìm kiếm voucher', error: err });
     }
-  });
-  
+});
 
-
+//Route: Get vouchers available / unavailable
 router.get('/date', verifyToken, async (req, res) => {
   try {
       const { comparison } = req.query;
@@ -117,8 +119,32 @@ router.get('/date', verifyToken, async (req, res) => {
       res.status(500).json({ message: 'Error filtering vouchers by date', error });
   }
 });
-});
-// Dynamic Routes
+
+// Route:Get vouchers amount >10
+router.get('/amount/:amount', verifyToken, async (req, res) => {
+    try {
+        const { amount } = req.params;  
+        const minAmount = parseFloat(amount); 
+  
+        if (isNaN(minAmount)) {
+            return res.status(400).json({ message: 'Invalid amount parameter. It must be a number.' });
+        }
+  
+        const vouchers = await Voucher.find({ amount: { $gt: minAmount } });
+  
+        if (vouchers.length === 0) {
+            return res.status(404).json({ message: `No vouchers found with amount greater than ${minAmount}` });
+        }
+  
+        res.status(200).json(vouchers);
+    } catch (error) {
+        console.error("Error fetching vouchers by amount:", error);
+        res.status(500).json({ message: 'Error fetching vouchers by amount', error });
+    }
+  });
+
+
+//Dynamic Routes
 router.get('/:id', verifyToken, async (req, res) => {
   try {
       const { id } = req.params;
